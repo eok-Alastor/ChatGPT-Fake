@@ -1,0 +1,33 @@
+{
+  "name": "chatgpt-fake",
+  "version": "1.0.0",
+  "description": "ChatGPT Fake - Full Stack Application",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install && cd backend && npm install && cd ../front && npm install",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:front\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:front": "cd front && npm run dev",
+    "build": "npm run build:backend && npm run build:front",
+    "build:backend": "cd backend && npm run build",
+    "build:front": "cd front && npm run build",
+    "build:parallel": "concurrently \"npm run build:backend\" \"npm run build:front\"",
+    "start": "concurrently \"npm run start:backend\" \"npm run start:front\"",
+    "start:backend": "cd backend && npm run start",
+    "start:front": "cd front && npm run preview",
+    "clean": "npm run clean:backend && npm run clean:front",
+    "clean:backend": "cd backend && rimraf dist",
+    "clean:front": "cd front && rimraf dist"
+  },
+  "keywords": [
+    "chatgpt",
+    "fake",
+    "full-stack"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "rimraf": "^5.0.5"
+  }
+}
