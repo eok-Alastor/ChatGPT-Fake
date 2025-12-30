@@ -1,6 +1,7 @@
-import express from 'express';
+import express, { Express } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 
 // Import routes
@@ -18,7 +19,7 @@ dotenv.config();
 // Initialize database schema
 import './db/schema';
 
-const app = express();
+const app: Express = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
@@ -44,6 +45,21 @@ apiRouter.use('/tags', tagRoutes);
 apiRouter.use('/models', modelRoutes);
 
 app.use('/api', apiRouter);
+
+// Serve static files from frontend (only in production)
+if (process.env.NODE_ENV === 'production') {
+  // Use process.cwd() to get the current working directory
+  const frontendDist = path.join(process.cwd(), 'front', 'dist');
+  app.use(express.static(frontendDist));
+
+  // SPA fallback - serve index.html for all non-API routes
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) {
+      return next();
+    }
+    res.sendFile(path.join(frontendDist, 'index.html'));
+  });
+}
 
 // Error handling
 app.use(notFoundHandler);

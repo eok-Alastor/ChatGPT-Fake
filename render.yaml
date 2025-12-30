@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: chatgpt-fake-backend
+    runtime: node
+    region: singapore
+    buildCommand: npm install && npm run build
+    startCommand: cd backend && npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
