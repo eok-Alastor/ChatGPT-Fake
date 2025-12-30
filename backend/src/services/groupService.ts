@@ -70,16 +70,18 @@ export function getGroups(userId: string): any[] {
       SELECT
         gc.id, gc.name, gc.owner_id, gc.created_at, gc.updated_at,
         GROUP_CONCAT(gcb.bot_id) as bot_ids,
+        GROUP_CONCAT(b.name) as bot_names,
         m.id as last_message_id,
         m.content as last_message_content,
         m.sender_type as last_message_sender_type,
         m.sender_id as last_message_sender_id,
-        b.name as last_message_sender_name,
+        last_b.name as last_message_sender_name,
         m.created_at as last_message_created_at
       FROM group_conversations gc
       LEFT JOIN group_conversation_bots gcb ON gc.id = gcb.group_conversation_id
+      LEFT JOIN bots b ON gcb.bot_id = b.id
       LEFT JOIN messages m ON gc.id = m.group_conversation_id
-      LEFT JOIN bots b ON m.sender_id = b.id
+      LEFT JOIN bots last_b ON m.sender_id = last_b.id
       WHERE gc.owner_id = ?
       GROUP BY gc.id
       ORDER BY gc.updated_at DESC
@@ -87,24 +89,34 @@ export function getGroups(userId: string): any[] {
     )
     .all(userId) as any[];
 
-  return groups.map(group => ({
-    id: group.id,
-    name: group.name,
-    owner_id: group.owner_id,
-    bot_ids: group.bot_ids ? group.bot_ids.split(',') : [],
-    created_at: group.created_at,
-    updated_at: group.updated_at,
-    lastMessage: group.last_message_id
-      ? {
-          id: group.last_message_id,
-          content: group.last_message_content,
-          sender_type: group.last_message_sender_type,
-          sender_id: group.last_message_sender_id,
-          sender_name: group.last_message_sender_name || 'Unknown',
-          created_at: group.last_message_created_at
-        }
-      : undefined
-  }));
+  return groups.map(group => {
+    const botIds = group.bot_ids ? group.bot_ids.split(',') : [];
+    const botNames = group.bot_names ? group.bot_names.split(',') : [];
+    const bots = botIds.map((botId: string, index: number) => ({
+      id: botId,
+      name: botNames[index] || `Bot ${botId.slice(0, 4)}`
+    }));
+
+    return {
+      id: group.id,
+      name: group.name,
+      owner_id: group.owner_id,
+      botIds,
+      bots,
+      created_at: group.created_at,
+      updated_at: group.updated_at,
+      lastMessage: group.last_message_id
+        ? {
+            id: group.last_message_id,
+            content: group.last_message_content,
+            sender_type: group.last_message_sender_type,
+            sender_id: group.last_message_sender_id,
+            sender_name: group.last_message_sender_name || 'Unknown',
+            created_at: group.last_message_created_at
+          }
+        : undefined
+    };
+  });
 }
 
 export function getGroupById(groupId: string, userId: string): any | null {

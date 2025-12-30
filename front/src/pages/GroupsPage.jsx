@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { groupConversationAPI } from '../services/api';
 import { Plus, Users, Clock, Bot, MessageSquare } from 'lucide-react';
@@ -20,7 +20,7 @@ export default function GroupsPage() {
   });
 
   // 加载群组列表
-  const loadGroups = async () => {
+  const loadGroups = useCallback(async () => {
     try {
       setLoading(true);
       const response = await groupConversationAPI.getAll();
@@ -30,7 +30,7 @@ export default function GroupsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // 加载机器人列表
   const loadBots = async () => {
@@ -48,6 +48,40 @@ export default function GroupsPage() {
   useEffect(() => {
     loadGroups();
   }, []);
+
+  // 当页面重新获得焦点时刷新列表
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        loadGroups();
+      }
+    };
+
+    const handleFocus = () => {
+      loadGroups();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [loadGroups]);
+
+  // 监听 conversation-updated 事件，从 menu 组件创建群组后刷新
+  useEffect(() => {
+    const handleConversationUpdated = () => {
+      console.log('GroupsPage 收到 conversation-updated 事件，刷新列表');
+      loadGroups();
+    };
+
+    window.addEventListener('conversation-updated', handleConversationUpdated);
+    return () => {
+      window.removeEventListener('conversation-updated', handleConversationUpdated);
+    };
+  }, [loadGroups]);
 
   // 打开创建群组弹窗
   const handleOpenCreateModal = async () => {

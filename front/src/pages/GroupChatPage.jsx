@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { groupConversationAPI } from '../services/api';
 import {
@@ -29,17 +29,17 @@ export default function GroupChatPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // 加载群组详情
-  const loadGroup = async () => {
+  const loadGroup = useCallback(async () => {
     try {
       const response = await groupConversationAPI.getById(groupId);
       setGroup(response.data);
     } catch (error) {
       console.error('加载群组详情失败:', error);
     }
-  };
+  }, [groupId]);
 
   // 加载消息列表
-  const loadMessages = async () => {
+  const loadMessages = useCallback(async () => {
     try {
       setLoading(true);
       const response = await groupConversationAPI.getMessages(groupId, {
@@ -51,7 +51,7 @@ export default function GroupChatPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [groupId]);
 
   // 滚动到底部
   const scrollToBottom = () => {
@@ -62,6 +62,27 @@ export default function GroupChatPage() {
     loadGroup();
     loadMessages();
   }, [groupId]);
+
+  // 当页面重新获得焦点时刷新群组信息
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        loadGroup();
+      }
+    };
+
+    const handleFocus = () => {
+      loadGroup();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [loadGroup]);
 
   useEffect(() => {
     scrollToBottom();
@@ -112,8 +133,8 @@ export default function GroupChatPage() {
               setMessages((prev) => [...prev, {
                 id: streamingId,
                 sender_type: 'bot',
-                sender_id: data.data.senderId,
-                sender_name: data.data.senderName,
+                sender_id: data.data.sender_id,
+                sender_name: data.data.sender_name,
                 content: '',
                 created_at: new Date().toISOString(),
                 streaming: true
@@ -198,7 +219,7 @@ export default function GroupChatPage() {
       'bg-red-600',
     ];
     const index =
-      senderId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) %
+      (senderId || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) %
       colors.length;
     return colors[index];
   };
@@ -208,7 +229,7 @@ export default function GroupChatPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex flex-col bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div className="h-full flex flex-col bg-white dark:bg-gray-800 overflow-hidden">
       {/* 顶部栏 */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
         <div className="flex items-center gap-3 flex-1 min-w-0">

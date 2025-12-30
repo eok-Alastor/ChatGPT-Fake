@@ -246,6 +246,7 @@ router.post('/:groupId/messages/stream', async (req: AuthRequest, res: Response)
             type: 'aiMessageStart',
             data: {
               id: botMessageId,
+              sender_id: bot.id,
               sender_type: 'bot',
               sender_name: bot.name,
               created_at: botNow

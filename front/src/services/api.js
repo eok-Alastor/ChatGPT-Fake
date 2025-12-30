@@ -186,7 +186,7 @@ export const groupConversationAPI = {
   create: (data) => api.post('/group-conversations', data),
 
   // 获取所有群组
-  getAll: () => api.get('/group-conversations'),
+  getAll: (params) => api.get('/group-conversations', { params }),
 
   // 获取群组详情
   getById: (groupId) => api.get(`/group-conversations/${groupId}`),

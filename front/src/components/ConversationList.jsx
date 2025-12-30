@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { conversationAPI, groupConversationAPI, tagAPI } from '../services/api';
@@ -32,7 +32,7 @@ export default function ConversationList({ activeTab }) {
   const [bots, setBots] = useState([]);
 
   // 加载数据
-  const loadData = async (tab, tag = null, forceRefresh = false) => {
+  const loadData = useCallback(async (tab, tag = null, forceRefresh = false) => {
     try {
       setLoading(true);
       if (tab === 'conversations') {
@@ -44,7 +44,8 @@ export default function ConversationList({ activeTab }) {
         const response = await conversationAPI.getAll(params);
         setConversations(response.data);
       } else {
-        const response = await groupConversationAPI.getAll();
+        const params = forceRefresh ? { _t: Date.now() } : {};
+        const response = await groupConversationAPI.getAll(params);
         setGroups(response.data);
       }
     } catch (error) {
@@ -52,7 +53,7 @@ export default function ConversationList({ activeTab }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
   const handleMenuButtonClick = (e, itemId) => {
     e.stopPropagation();
     if (openMenuId === itemId) {
