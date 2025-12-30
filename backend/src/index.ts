@@ -48,8 +48,8 @@ app.use('/api', apiRouter);
 
 // Serve static files from frontend (only in production)
 if (process.env.NODE_ENV === 'production') {
-  // Use process.cwd() to get the current working directory
-  const frontendDist = path.join(process.cwd(), 'front', 'dist');
+  // Go up one directory level from backend/ to project root, then to front/dist
+  const frontendDist = path.join(process.cwd(), '..', 'front', 'dist');
   app.use(express.static(frontendDist));
 
   // SPA fallback - serve index.html for all non-API routes
