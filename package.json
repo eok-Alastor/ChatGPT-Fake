@@ -13,9 +13,10 @@
     "build:backend": "cd backend && npm run build",
     "build:front": "cd front && npm run build",
     "build:parallel": "concurrently \"npm run build:backend\" \"npm run build:front\"",
-    "start": "concurrently \"npm run start:backend\" \"npm run start:front\"",
+    "start": "cd backend && npm run start",
     "start:backend": "cd backend && npm run start",
     "start:front": "cd front && npm run preview",
+    "start:dev": "concurrently \"npm run start:backend\" \"npm run start:front\"",
     "clean": "npm run clean:backend && npm run clean:front",
     "clean:backend": "cd backend && rimraf dist",
     "clean:front": "cd front && rimraf dist"
